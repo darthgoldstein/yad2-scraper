@@ -1,0 +1,40 @@
+{
+  "name": "yad2-scraper",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darthgoldstein/yad2-scraper.git"
+  },
+  "license": "ISC",
+  "homepage": "https://github.com/darthgoldstein/yad2-scraper#readme",
+  "source": "client/index.html",
+  "targets": {
+    "default": {
+      "distDir": "build/client"
+    }
+  },
+  "scripts": {
+    "build": "concurrently 'npm run build:*'",
+    "build:client": "parcel build",
+    "build:server": "tsc",
+    "start": "node build/server/index.js",
+    "start-dev": "concurrently 'npm run start-dev:*'",
+    "start-dev:client": "parcel client/index.html -p 3000",
+    "start-dev:server": "ts-node server"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.14",
+    "@types/react": "^18.0.26",
+    "@types/react-dom": "^18.0.9",
+    "concurrently": "^7.6.0",
+    "http-proxy-middleware": "^2.0.6",
+    "parcel": "^2.8.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.3"
+  },
+  "dependencies": {
+    "axios": "^1.2.0",
+    "express": "^4.18.2",
+    "mongodb": "^4.12.1"
+  }
+}
