@@ -31,9 +31,12 @@
     "mongodb": "^4.12.1"
   },
   "scripts": {
-    "build": "concurrently 'npm run build:*'",
-    "build:client": "cd client && npm ci && cd ../ && rimraf build/client && parcel build",
-    "build:server": "npm ci && rimraf build/server && tsc",
+    "build": "npm run install && concurrently 'npm run build:*'",
+    "install": "concurrently 'npm run install:*'",
+    "install:client": "cd client && npm i",
+    "install:server": "npm i",
+    "build:client": "rimraf build/client && parcel build",
+    "build:server": "rimraf build/server && tsc",
     "start": "node build/server/index.js",
     "start-dev": "concurrently 'npm run start-dev:*'",
     "start-dev:client": "parcel client/index.html -p 3000",
