@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { connectToDatabase, Listing } from './mongo/db-client';
+import { config } from './config';
 
 dotenv.config();
 
@@ -18,8 +19,8 @@ const startApp = async () => {
   app.get('*', (_, res) => {
     res.sendFile('index.html');
   });
-  app.listen(3001, () => {
-    console.log('Listening at port 3001');
+  app.listen(config.serverPort, () => {
+    console.log(`Listening at port ${config.serverPort}`);
   });
 };
 
