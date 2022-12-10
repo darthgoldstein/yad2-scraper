@@ -7,7 +7,7 @@ dotenv.config();
 const startApp = async () => {
   await connectToDatabase();
 
-  Listing.insertOne({ listingId: '123' });
+  Listing.insertOne({ listingId: '456' });
   const result = await Listing.find().toArray();
 
   const app = express();
