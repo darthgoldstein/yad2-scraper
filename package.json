@@ -31,8 +31,7 @@
     "mongodb": "^4.12.1"
   },
   "scripts": {
-    "build": "npm run install && concurrently 'npm run build:*'",
-    "install": "concurrently 'npm run install:*'",
+    "build": "concurrently 'npm run install:*' && concurrently 'npm run build:*'",
     "install:client": "cd client && npm i",
     "install:server": "npm i",
     "build:client": "rimraf build/client && parcel build",
