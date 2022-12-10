@@ -32,7 +32,7 @@
   },
   "scripts": {
     "build": "concurrently 'npm run build:*'",
-    "build:client": "npm ci && rimraf build/client && parcel build",
+    "build:client": "cd client && npm ci && cd ../ && rimraf build/client && parcel build",
     "build:server": "npm ci && rimraf build/server && tsc",
     "start": "node build/server/index.js",
     "start-dev": "concurrently 'npm run start-dev:*'",
