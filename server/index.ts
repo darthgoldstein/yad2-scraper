@@ -1,6 +1,15 @@
 import express from 'express';
+import dotenv from 'dotenv';
+import { connectToDatabase, Listing } from './mongo/db-client';
+
+dotenv.config();
 
 const startApp = async () => {
+  await connectToDatabase();
+
+  Listing.insertOne({ listingId: '123' });
+  const result = await Listing.find().toArray();
+
   const app = express();
   app.use(express.static('./build/client'));
   app.get('/api/getStuff', (_, res) => {
