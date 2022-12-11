@@ -33,7 +33,7 @@
     "pino": "^8.7.0"
   },
   "scripts": {
-    "build": "npm run install:server && npm run install:client && concurrently 'npm run build:*'",
+    "build": "npx concurrently 'npm run install:*' && concurrently 'npm run build:*'",
     "install:client": "cd client && npm i",
     "install:server": "npm i",
     "build:client": "rimraf build/client && parcel build",
