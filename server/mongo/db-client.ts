@@ -7,9 +7,9 @@ const client = new MongoClient(config.mongoUrl);
 const db = client.db(config.dbName);
 
 export const connectToDatabase = async () => {
-  const client = new MongoClient(config.mongoUrl);
   if (!connected) {
     await client.connect();
+    connected = true;
   }
   return db;
 };
