@@ -19,3 +19,23 @@ interface ListingSchema {
 }
 
 export const Listing = db.collection<ListingSchema>('listing');
+
+interface RentalSchema {
+  listingId: string;
+}
+
+export const Rental = db.collection<RentalSchema>('rental');
+
+interface KeyValueSchema {
+  key: string;
+  value: any;
+}
+
+export const KeyValue = db.collection<KeyValueSchema>('keyValue');
+
+interface TelegramSubscriberSchema {
+  userID: number;
+}
+
+export const TelegramSubscriber =
+  db.collection<TelegramSubscriberSchema>('telegramSubscriber');
