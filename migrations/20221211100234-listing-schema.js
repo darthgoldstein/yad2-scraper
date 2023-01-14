@@ -54,7 +54,7 @@ module.exports = {
   },
 
   async down(db, client) {
-    await db.runCommand({
+    await db.command({
       collMod: 'listing',
       validator: {
         $jsonSchema: {
