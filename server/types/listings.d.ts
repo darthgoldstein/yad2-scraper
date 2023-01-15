@@ -273,3 +273,14 @@ interface Rental {
   city: string;
   rentalType: string;
 }
+
+interface Filters {
+  minSize: number;
+  maxSize: number;
+  minFloor: number;
+  maxFloor: number;
+  minRooms: number;
+  maxRooms: number;
+  minPrice: number;
+  maxPrice: number;
+}

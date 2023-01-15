@@ -34,14 +34,14 @@
   },
   "scripts": {
     "build": "npx concurrently 'npm run install:*' && concurrently 'npm run build:*'",
-    "install:client": "cd client && npm i",
-    "install:server": "npm i",
+    "install:client": "cd client && npm ci",
+    "install:server": "npm ci",
     "build:client": "rimraf build/client && parcel build",
     "build:server": "npm run migration:up && rimraf build/server && tsc",
     "start": "node build/server/index.js",
     "start-dev": "concurrently 'npm run start-dev:*'",
-    "start-dev:client": "parcel client/index.html -p 3000",
-    "start-dev:server": "ts-node server",
+    "start-dev:client": "parcel watch",
+    "start-dev:server": "ts-node --files server",
     "migration:create": "migrate-mongo create",
     "migration:up": "migrate-mongo up",
     "migration:down": "migrate-mongo down"
