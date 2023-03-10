@@ -32,9 +32,10 @@
     "pino": "^8.7.0"
   },
   "scripts": {
-    "build": "npx concurrently -k 'npm run install:*' && npx concurrently -k 'npm run build:*'",
+    "install:all": "npm run install:server && npm run install:client",
     "install:client": "cd client && npm ci",
     "install:server": "npm ci",
+    "build": "npm run install:all && npx concurrently -k 'npm run build:*'",
     "build:client": "rimraf build/client && parcel build",
     "build:server": "npm run migration:up && rimraf build/server && tsc",
     "start": "node build/server/index.js",
