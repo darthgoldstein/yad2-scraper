@@ -34,7 +34,7 @@
     "install:all": "npm run install:server && npm run install:client",
     "install:client": "cd client && npm ci",
     "install:server": "npm ci",
-    "build": "npm run install:all && npx concurrently -k 'npm run build:*'",
+    "build": "npm run install:all && npx concurrently 'npm run build:*'",
     "build:client": "rimraf build/client && parcel build",
     "build:server": "rimraf build/server && tsc",
     "start": "node build/server/index.js",
