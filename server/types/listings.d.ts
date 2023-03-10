@@ -274,13 +274,6 @@ interface Rental {
   rentalType: string;
 }
 
-interface Filters {
-  minSize: number;
-  maxSize: number;
-  minFloor: number;
-  maxFloor: number;
-  minRooms: number;
-  maxRooms: number;
-  minPrice: number;
-  maxPrice: number;
-}
+type FilterNameEnum = typeof import('../lib/enums').FilterName;
+type FilterName = FilterNameEnum[keyof FilterNameEnum];
+type Filters = Record<FilterName, number>;

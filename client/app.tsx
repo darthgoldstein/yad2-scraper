@@ -1,4 +1,3 @@
-/// <reference path="../server/types/listings.d.ts" />
 import {
   CssBaseline,
   Typography,
@@ -6,6 +5,7 @@ import {
   TextFieldProps,
   Button,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import './app.css';
@@ -100,7 +100,8 @@ const SizeFilters = ({
 
 export const App = () => {
   const [filtersLoaded, setFiltersLoaded] = useState(false);
-  const [updateSuccess, setUpdateSuccess] = useState(null);
+  const [updateSuccess, setUpdateSuccess] = useState<boolean>(null);
+  const [updating, setUpdating] = useState(false);
   const [minSize, setMinSize] = useState<number>(null);
   const [maxSize, setMaxSize] = useState<number>(null);
   const [minFloor, setMinFloor] = useState<number>(null);
@@ -130,6 +131,8 @@ export const App = () => {
   };
 
   const updateFilters = async () => {
+    setUpdating(true);
+    setUpdateSuccess(null);
     const formattedFilters = {
       minSize: minSize ?? -1,
       maxSize: maxSize ?? -1,
@@ -145,8 +148,8 @@ export const App = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formattedFilters),
     });
-    const success = response.status === 200;
-    setUpdateSuccess(success);
+    setUpdateSuccess(response.ok);
+    setUpdating(false);
   };
 
   useEffect(() => {
@@ -209,8 +212,10 @@ export const App = () => {
               onClick={updateFilters}
               variant="contained"
               className="submit-button"
+              disabled={updating}
             >
               submit change
+              {updating && <CircularProgress size={30} className='updating-loading-circle' />}
             </Button>
             {updateSuccess && <Alert severity="success">Filters updated</Alert>}
             {updateSuccess === false && <Alert severity="error">Filter update failed</Alert>}

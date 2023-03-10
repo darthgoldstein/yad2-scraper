@@ -7,4 +7,5 @@ export const config = {
     mongoUrl: process.env.MONGO_URL,
     dbName: process.env.DB_NAME,
     telegramBotToken: process.env.TELEGRAM_BOT_TOKEN,
+    homePageUrl: process.env.CYCLIC_URL,
 };

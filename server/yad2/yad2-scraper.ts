@@ -1,9 +1,9 @@
-import axios from 'axios';
-import { FilterNames, VehicleBrands } from '../lib/constants';
+import { VehicleBrands } from '../lib/constants';
 import { Rental } from '../mongo/db-client';
 import { KeyValueStore } from '../mongo/key-value-store';
 import { tryAgain } from '../lib/tryAgain';
 import { logger } from '../lib/logger';
+import { FilterName, KeyValueKey } from '../lib/enums';
 
 interface Row4 {
   key: string;
@@ -171,8 +171,7 @@ interface Listing {
   priceText: number;
 }
 
-const bugFixHeader = Object.freeze({});
-
+// TODO: Finish this shit
 export const getCars = async () => {
   const normalizedBrandCodes = [
     VehicleBrands.Daihatsu,
@@ -186,10 +185,8 @@ export const getCars = async () => {
     .map((car) => car.code)
     .join(',');
   const url = `https://gw.yad2.co.il/feed-search-legacy/vehicles/cars?manufacturer=${normalizedBrandCodes}&forceLdLoad=true`;
-  const { data } = await axios.get(url, {
-    headers: { 'accept-encoding': null },
-  });
-  const items: Listing[] = data.data.feed.feed_items
+  const searchResult = await (await fetch(url)).json();
+  const items: Listing[] = searchResult.feed.feed_items
     .filter((item: RawListing) => item.type === 'ad')
     .map((item: RawListing) => {
       const price = parseInt(item.price.replace(',', ''));
@@ -205,8 +202,7 @@ export const getCars = async () => {
         priceText: `${item.currency_text}${price}`,
       };
     });
-
-  console.log(data.data);
+  return items;
 };
 
 const sanitizeFilters = (filters: Partial<Filters>) => {
@@ -215,8 +211,8 @@ const sanitizeFilters = (filters: Partial<Filters>) => {
   }
 
   const newFilters = { ...filters };
-  Object.entries(newFilters).forEach(([key, value]) => {
-    if (value == null || !FilterNames.includes(key)) {
+  Object.entries(newFilters).forEach(([key, value]: [FilterName, number]) => {
+    if (value == null || !Object.values(FilterName).includes(key)) {
       delete newFilters[key];
     }
   });
@@ -226,7 +222,9 @@ const sanitizeFilters = (filters: Partial<Filters>) => {
 export const updateRentalFilters = async (filters: Partial<Filters>) => {
   filters = sanitizeFilters(filters);
   await Promise.all(
-    Object.entries(filters).map(([key, value]) => KeyValueStore.set(key, value))
+    Object.entries(filters).map(([key, value]: [FilterName, number]) => {
+      KeyValueStore.set(createFilterKey(key), value);
+    })
   );
 };
 
@@ -235,12 +233,17 @@ export const getRentalFilters = async () => {
   const filters: Filters = {};
 
   await Promise.all(
-    FilterNames.map(async (filterName) => {
-      filters[filterName] = (await KeyValueStore.get(filterName)) ?? -1;
+    Object.values(FilterName).map(async (filterName) => {
+      const filterKey = createFilterKey(filterName);
+      filters[filterName] = (await KeyValueStore.get(filterKey)) ?? -1;
     })
   );
 
   return filters;
+};
+
+const createFilterKey = (filter: FilterName) => {
+  return `${KeyValueKey.RentalFilterPrefix}${filter}`;
 };
 
 const getRentalFeed = async (numPages = 4): Promise<RentalFeedItem[]> => {
@@ -256,7 +259,7 @@ const getRentalFeed = async (numPages = 4): Promise<RentalFeedItem[]> => {
   } = await getRentalFilters();
 
   const createRange = (min: number, max: number) => {
-    return min !== -1 && max !== -1 ? `${min}-${max}` : undefined;
+    return min === -1 && max === -1 ? '' : `${min}-${max}`;
   };
 
   const filters = {
@@ -275,32 +278,30 @@ const getRentalFeed = async (numPages = 4): Promise<RentalFeedItem[]> => {
     ([key, value]) => value ?? delete filters[key]
   );
 
-  const itemsPromises = [...Array(numPages)].map(async (_, i) => {
-    filters.page = i + 1;
+  const items: RentalFeedItem[] = [];
+
+  for (let i = 1; i <= numPages; i++) {
+    filters.page = i;
     // @ts-ignore
     const queryParams = new URLSearchParams(filters).toString();
     const url = `https://gw.yad2.co.il/feed-search-legacy/realestate/rent?${queryParams}`;
-    const response = await tryAgain(() => {
-      return axios.get(url, {
-        headers: { 'accept-encoding': null },
-      });
-    }, 4);
-    const feedItems = (
-      response.data.data.feed.feed_items as RentalFeedItem[]
-    ).filter((item) => item.ad_type === 'ad');
-    return feedItems.filter((item) => item.ad_type === 'ad');
-  });
-  return (await Promise.all(itemsPromises)).flat();
+    const response = await fetch(url);
+    if (!response.ok) {
+      break;
+    }
+    const responseBody = await response.json();
+    items.push(...responseBody.data.feed.feed_items);
+  }
+
+  return items.filter((item) => item.ad_type === 'ad');
 };
 
 const transformFeedItemIntoRental = async (
   item: RentalFeedItem
 ): Promise<Rental> => {
   const url = `https://gw.yad2.co.il/feed-search-legacy/item?token=${item.id}`;
-  const response = await axios.get(url, {
-    headers: { 'accept-encoding': null },
-  });
-  const itemDetails: RentalItemDetails = response.data.data;
+  const result = await (await fetch(url)).json();
+  const itemDetails: RentalItemDetails = result.data;
   return {
     id: item.id,
     arnona: parseInt(itemDetails.property_tax) || 0,
@@ -323,14 +324,19 @@ export const getRentals = async () => {
   const seenRentalIDs = (await Rental.find({}).toArray()).map(
     (r) => r.listingId
   );
-  const rentals = await tryAgain(async () => {
-    const feedItems = (await getRentalFeed()).filter(
-      ({ id }) => !seenRentalIDs.includes(id)
-    );
-    return Promise.all(feedItems.map(transformFeedItemIntoRental));
-  }, 4);
+  const rentals = await tryAgain(
+    async () => {
+      const feedItems = (await getRentalFeed()).filter(
+        ({ id }) => !seenRentalIDs.includes(id)
+      );
+      return Promise.all(feedItems.map(transformFeedItemIntoRental));
+    },
+    { tries: 4 }
+  );
   logger.info({ amount: rentals.length }, 'found new rental listings');
-  await Rental.insertMany(rentals.map(({ id }) => ({ listingId: id })));
+  if (rentals.length) {
+    await Rental.insertMany(rentals.map(({ id }) => ({ listingId: id })));
+  }
   return rentals;
 };
 

@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import { config } from '../config';
+import { config } from '../lib/config';
 
 let connected = false;
 
@@ -7,9 +7,11 @@ const client = new MongoClient(config.mongoUrl);
 const db = client.db(config.dbName);
 
 export const connectToDatabase = async () => {
-  if (!connected) {
-    await client.connect();
-    connected = true;
+  while (!connected) {
+    connected = await new Promise<boolean>((res) => {
+      setTimeout(() => res(false), 4000);
+      client.connect().then(() => res(true));
+    });
   }
   return db;
 };

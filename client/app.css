@@ -43,4 +43,11 @@ html {
 .filter-container .submit-button {
   margin-top: 8px;
   width: 100%;
+  position: relative;
+}
+
+.submit-button .updating-loading-circle {
+  position: absolute;
+  top: calc(50% - 15px);
+  left: calc(50% - 15px);
 }

@@ -1,14 +1,3 @@
-export const FilterNames = [
-  'minSize',
-  'maxSize',
-  'minFloor',
-  'maxFloor',
-  'minRooms',
-  'maxRooms',
-  'minPrice',
-  'maxPrice',
-];
-
 export const TELEGRAM_API_BASE_URL = 'https://api.telegram.org';
 
 export const TelegramMethod = {

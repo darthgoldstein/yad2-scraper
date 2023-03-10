@@ -25,7 +25,6 @@
     "typescript": "^4.9.3"
   },
   "dependencies": {
-    "axios": "^1.2.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "migrate-mongo": "^9.0.0",
@@ -33,15 +32,16 @@
     "pino": "^8.7.0"
   },
   "scripts": {
-    "build": "npx concurrently 'npm run install:*' && concurrently 'npm run build:*'",
+    "build": "npx concurrently -k 'npm run install:*' && npx concurrently -k 'npm run build:*'",
     "install:client": "cd client && npm ci",
     "install:server": "npm ci",
     "build:client": "rimraf build/client && parcel build",
     "build:server": "npm run migration:up && rimraf build/server && tsc",
     "start": "node build/server/index.js",
-    "start-dev": "concurrently 'npm run start-dev:*'",
+    "start-dev": "concurrently -k 'npm run start-dev:*'",
     "start-dev:client": "parcel watch",
     "start-dev:server": "ts-node --files server",
+    "start-dev:db": "mongod",
     "migration:create": "migrate-mongo create",
     "migration:up": "migrate-mongo up",
     "migration:down": "migrate-mongo down"
