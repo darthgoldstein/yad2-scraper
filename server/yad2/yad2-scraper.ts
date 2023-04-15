@@ -256,6 +256,8 @@ const getRentalFeed = async (numPages = 4): Promise<RentalFeedItem[]> => {
     maxRooms,
     minPrice,
     maxPrice,
+    // area,
+    // topArea,
   } = await getRentalFilters();
 
   const createRange = (min: number, max: number) => {
@@ -265,17 +267,21 @@ const getRentalFeed = async (numPages = 4): Promise<RentalFeedItem[]> => {
   const filters = {
     forceLdLoad: true,
     priceOnly: 1,
-    airConditioner: 1,
-    balcony: 1,
-    parking: 1,
+    // airConditioner: 1,
+    // balcony: 1,
+    // parking: 1,
     squaremeter: createRange(minSize, maxSize),
     rooms: createRange(minRooms, maxRooms),
     price: createRange(minPrice, maxPrice),
     floor: createRange(minFloor, maxFloor),
     page: 1,
+    // Herzliya
+    city: 6400,
+    area: 18,
+    topArea: 19,
   };
   Object.entries(filters).forEach(
-    ([key, value]) => value ?? delete filters[key]
+    ([key, value]) => value || delete filters[key]
   );
 
   const items: RentalFeedItem[] = [];
@@ -317,6 +323,7 @@ const transformFeedItemIntoRental = async (
     houseNumber: itemDetails.address_home_number,
     city: itemDetails.city_text,
     rentalType: item.row_2?.split(',')[0] || null,
+    url: `https://www.yad2.co.il/item/${item.id}`,
   };
 };
 
@@ -357,8 +364,10 @@ export const composeRentalText = (rental: Rental) => {
   const price = rental.price ? `Rent: ₪${rental.price}` : '';
   const arnona = rental.arnona ? `Arnona: ₪${rental.arnona}` : '';
   const vad = rental.vadBayit ? `Vad: ₪${rental.vadBayit}` : '';
-  const row1 = location ? `Location: ${location}` : '';
-  const row2 = [size, floorText, rentalType].filter(Boolean).join(', ');
+  const row1 = `[${[size, floorText, rentalType].filter(Boolean).join(', ')}](${
+    rental.url
+  })`;
+  const row2 = location ? `Location: ${location}` : '';
   const row3 = [price, arnona, vad].filter(Boolean).join(', ');
   const row4 = rental.entranceDate ? `Entrance: ${rental.entranceDate}` : '';
   return [row1, row2, row3, row4].filter(Boolean).join('\n');

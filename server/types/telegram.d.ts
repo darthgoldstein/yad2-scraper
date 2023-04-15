@@ -151,11 +151,17 @@ interface TelegramResponse<T = any> {
   result: T;
 }
 
+interface SendMessageParams {
+  message: string;
+  userID: number;
+  markdown?: boolean;
+}
+
 interface TelegramBot {
   startPolling: (interval?: number) => void;
   stopPolling: () => void;
   getMe: () => Promise<User>;
-  sendMessage: (message: string, userID: number) => Promise<Message>;
+  sendMessage: (params: SendMessageParams) => Promise<Message>;
   getUpdates: () => Promise<Update[]>;
   updateSubscribers: (rentals: Rental[]) => Promise<void>;
   checkForRentalUpdates: () => Promise<void>;

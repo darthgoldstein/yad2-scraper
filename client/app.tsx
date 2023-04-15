@@ -6,9 +6,17 @@ import {
   Button,
   Alert,
   CircularProgress,
+  Select,
+  MenuItem,
+  Checkbox,
+  ListItemText,
+  SelectChangeEvent,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import './app.css';
+import { Areas } from './lib/constants';
 
 interface FilterRowProps {
   label: string;
@@ -52,8 +60,12 @@ const SizeFilters = ({
   onMaxChange,
 }: SizeFiltersProps) => {
   const numsOnly = (value: string) => {
-    return /^[0-9]*$/.test(value);
+    return /^[0-9]*\.?[0-9]*$/.test(value);
   };
+
+  const toNumber = (value: string) => {
+    return value === '.' ? 0 : Number(value);
+  }
 
   return (
     <>
@@ -66,7 +78,7 @@ const SizeFilters = ({
             return;
           }
           if (numsOnly(value)) {
-            const numeric = Number(value);
+            const numeric = toNumber(value);
             if (maxValue !== null && numeric > maxValue) {
               onMaxChange(numeric);
             }
@@ -85,7 +97,7 @@ const SizeFilters = ({
             return;
           }
           if (numsOnly(value)) {
-            const numeric = Number(value);
+            const numeric = toNumber(value);
             if (minValue !== null && numeric < minValue) {
               onMinChange(numeric);
             }
@@ -110,6 +122,7 @@ export const App = () => {
   const [maxRooms, setMaxRooms] = useState<number>(null);
   const [minPrice, setMinPrice] = useState<number>(null);
   const [maxPrice, setMaxPrice] = useState<number>(null);
+  const [selectedArea, setSelectedArea] = useState<typeof Areas[number]>(null);
 
   const retrieveFilters = async () => {
     const response = await fetch('/api/getFilters');
@@ -133,7 +146,7 @@ export const App = () => {
   const updateFilters = async () => {
     setUpdating(true);
     setUpdateSuccess(null);
-    const formattedFilters = {
+    const formattedFilters: any = {
       minSize: minSize ?? -1,
       maxSize: maxSize ?? -1,
       minFloor: minFloor ?? -1,
@@ -143,6 +156,12 @@ export const App = () => {
       minPrice: minPrice ?? -1,
       maxPrice: maxPrice ?? -1,
     };
+    if (selectedArea) {
+      formattedFilters.topArea = Number(selectedArea.complex_id.topArea);
+      if (formattedFilters.complex_id.area) {
+        formattedFilters.area = Number(formattedFilters.complex_id.area)
+      }
+    }
     const response = await fetch('/api/updateFilters', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -164,6 +183,40 @@ export const App = () => {
         </Typography>
         {filtersLoaded ? (
           <div className="filter-container">
+            {/* <FilterRow
+              label="Area"
+              content={
+                <FormControl fullWidth>
+                  <InputLabel id="select-label">Select Area</InputLabel>
+                  <Select fullWidth variant="standard" labelId="select-label">
+                    {Areas.map((area) => {
+                      const { value, isGroupHeader, complex_id, text } = area;
+                      const selected = selectedArea?.value === area.value;
+                      const marginRight = isGroupHeader ? 0 : 24;
+                      const fontWeight = selected ? 'bold' : '';
+
+                      return (
+                        <MenuItem key={value} value={value}>
+                          <ListItemText
+                            primary={
+                              <div
+                                style={{
+                                  textAlign: 'right',
+                                  marginRight,
+                                  fontWeight,
+                                }}
+                              >
+                                {text}
+                              </div>
+                            }
+                          />
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
+              }
+            /> */}
             <FilterRow
               label="Size (m²)"
               content={
@@ -215,10 +268,17 @@ export const App = () => {
               disabled={updating}
             >
               submit change
-              {updating && <CircularProgress size={30} className='updating-loading-circle' />}
+              {updating && (
+                <CircularProgress
+                  size={30}
+                  className="updating-loading-circle"
+                />
+              )}
             </Button>
             {updateSuccess && <Alert severity="success">Filters updated</Alert>}
-            {updateSuccess === false && <Alert severity="error">Filter update failed</Alert>}
+            {updateSuccess === false && (
+              <Alert severity="error">Filter update failed</Alert>
+            )}
           </div>
         ) : (
           'Loading filters...'

@@ -20,18 +20,34 @@ const getMe = async (): Promise<User> => {
   return response.result;
 };
 
-const sendMessage = async (
-  message: string,
-  userID: number
-): Promise<Message> => {
+const sendMessage = async ({
+  message,
+  userID,
+  markdown,
+}: SendMessageParams): Promise<Message> => {
   const url = composeRoute(TelegramMethod.SendMessage);
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: userID, text: message }),
-  });
-  const responseBody = await response.json();
-  return responseBody.result;
+  const messageParts = message
+    .match(/[^\n]{4096}|.{1,4095}\n|.{1,4096}$/gs)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  let result: any;
+  for (const part of messageParts) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: userID,
+        text: part,
+        parse_mode: markdown ? 'Markdown' : undefined,
+        disable_web_page_preview: true,
+      }),
+    });
+    const responseBody = await response.json();
+    result = responseBody.result;
+  }
+
+  return result;
 };
 
 const getUpdates = async () => {
@@ -81,7 +97,7 @@ const handleUpdate = async (update: Update) => {
         { upsert: true }
       );
       const success = result.upsertedCount > 0;
-      updateLog.info({ success }, 'subscription attempt complete')
+      updateLog.info({ success }, 'subscription attempt complete');
       return success
         ? 'You are now subscribed to receive yad2 rental listings.'
         : "You're already subscribed homie.";
@@ -107,7 +123,7 @@ const handleUpdate = async (update: Update) => {
     responseText = `The command "${abridgedText}" doesn't work.`;
   }
   await KeyValueStore.set('lastUpdateID', update_id);
-  await sendMessage(responseText, userID);
+  await sendMessage({ message: responseText, userID });
   logger.info({ responseText, userID }, 'responding to user');
 };
 
@@ -127,7 +143,7 @@ const updateSubscribers = async (rentals: Rental[]) => {
   await Promise.all(
     subscriberIDs.map((id) => {
       logger.info({ userID: id }, 'Updating subscriber with new listings');
-      return sendMessage(messageText, id);
+      return sendMessage({ message: messageText, userID: id, markdown: true });
     })
   );
 };
@@ -137,10 +153,10 @@ const checkForRentalUpdates = async (requesterID?: number) => {
   if (newRentals.length) {
     await updateSubscribers(newRentals);
   } else if (requesterID) {
-    await sendMessage(
-      `Didn't find shit unfortunately. Try changing your filters at ${config.homePageUrl}.`,
-      requesterID
-    );
+    await sendMessage({
+      message: `Didn't find shit unfortunately. Try changing your filters at ${config.homePageUrl}.`,
+      userID: requesterID,
+    });
   }
 };
 

@@ -272,6 +272,7 @@ interface Rental {
   houseNumber: string;
   city: string;
   rentalType: string;
+  url: string;
 }
 
 type FilterNameEnum = typeof import('../lib/enums').FilterName;

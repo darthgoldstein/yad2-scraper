@@ -12,4 +12,6 @@ export const FilterName = {
   MaxRooms: 'maxRooms',
   MinPrice: 'minPrice',
   MaxPrice: 'maxPrice',
+  Area: 'area',
+  TopArea: 'topArea',
 } as const;
