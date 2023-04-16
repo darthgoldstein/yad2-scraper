@@ -12,6 +12,7 @@ dotenv.config();
 process.on('unhandledRejection', (error: Error) => {
   const reason = error instanceof Error ? error?.message ?? '' : error;
   logger.error({ reason }, 'unhandled rejection');
+  process.exit(1);
 });
 
 process.on('uncaughtException', (error: Error) => {
